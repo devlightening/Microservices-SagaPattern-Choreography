@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using OrderAPI.Models.Context;
 using OrderAPI.Models.Entites;
 using OrderAPI.ViewModels;
+using Shared.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +29,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapPost("/create-order", async (CreateOrderViewModel createOrderViewModel, OrderAPIDbContext _context) =>
+app.MapPost("/create-order", async (CreateOrderViewModel createOrderViewModel, OrderAPIDbContext _context,IPublishEndpoint _publishEndpoint) =>
 {
     OrderAPI.Models.Entites.Order order = new()
     {
@@ -45,6 +46,21 @@ app.MapPost("/create-order", async (CreateOrderViewModel createOrderViewModel, O
     };
     await _context.AddAsync(order);
     await _context.SaveChangesAsync();
+
+    OrderCreatedEvent orderCreatedEvent = new()
+    {
+        OrderId = order.OrderId,
+        BuyerId = order.BuyerId,
+        TotalPrice = order.TotalPrice,
+        OrderItems = order.OrderItems.Select(item => new Shared.Messages.OrderItemMessage
+        {
+            ProductId = item.ProductId,
+            Count = item.Count,
+            Price = item.Price
+        }).ToList()
+    };
+
+    await _publishEndpoint.Publish(order);
 });
 
 app.Run();
