@@ -1,22 +1,22 @@
 using MassTransit;
-using Shared.Events;
+using Shared;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddMassTransit(configurator =>
 {
-    configurator.AddConsumer<StockReservedEvent>();
+
     configurator.UsingRabbitMq((context, _configure) =>
     {
-
-
 
         _configure.Host(builder.Configuration["RabbitMQ"]);
     });
 });
 
 var app = builder.Build();
+
 
 
 

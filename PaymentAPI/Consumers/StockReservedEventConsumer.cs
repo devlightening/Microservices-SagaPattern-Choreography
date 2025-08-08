@@ -8,36 +8,40 @@ namespace PaymentAPI.Consumers
 
         public async Task Consume(ConsumeContext<StockReservedEvent> context)
         {
-            // Ödeme işlemleri
-            // kayıtlı kredi kartları, TotalPrice, Kredi kartı bilgileri..
+            // Gerçek ödeme işlemini taklit eden bir metot çağıralım
+            bool isPaymentSuccessful = await ProcessPayment(context.Message.OrderId, context.Message.TotalPrice);
 
-            if (true) // Ödemenin başarılı olduğu senaryo
+            if (isPaymentSuccessful) // Artık daha gerçekçi bir koşul var
             {
-                // Ödemenin Başarıyla Tamamlanıldığı..
+                // Ödemenin Başarıyla Tamamlanıldığı senaryo
                 PaymentCompletedEvent paymentCompletedEvent = new()
                 {
                     OrderId = context.Message.OrderId
                 };
-
-                // Önemli: Mesajı yayımlama işlemi burada yapılmalı.
                 await _publishEndpoint.Publish(paymentCompletedEvent);
-
-                Console.WriteLine("Ödeme Başarılı Bir Şekilde Tamamlandı.");
+                Console.WriteLine($"Ödeme Başarılı Bir Şekilde Tamamlandı. Sipariş ID: {context.Message.OrderId}");
             }
-            else // Ödemede sıkıntı çıktığı durum
+            else // Ödemenin başarısız olduğu senaryo
             {
                 PaymentFailedEvent paymentFailedEvent = new()
                 {
                     OrderId = context.Message.OrderId,
-                    Reason = "Ödeme işlemi başarısız oldu."
+                    // Sipariş ürünlerini de failed event'e eklemek mantıklı olabilir
+                    OrderItems = context.Message.OrderItems,
+                    Reason = "Ödeme işlemi başarısız oldu. Yetersiz bakiye veya hatalı kart bilgisi."
                 };
-
-                // Önemli: Bu mesaj zaten yayımlanıyordu.
                 await _publishEndpoint.Publish(paymentFailedEvent);
+                Console.WriteLine($"Ödeme Başarısız. Sipariş ID: {context.Message.OrderId}");
             }
+        }
 
-            // Consume metodu async olduğu için, Task.CompletedTask yerine return Task; kullanmak daha doğru olur.
-            // Bu zaten async/await ile halledildiği için ekstra bir dönüşe gerek kalmıyor, ancak best practice olarak dönüşü düzeltelim.
+        // Ödeme işlemini taklit eden bir örnek metot
+        private Task<bool> ProcessPayment(Guid orderId, decimal totalPrice)
+        {
+            // Burada ödeme servisi çağrılabilir, kart bilgileri kontrol edilebilir.
+            // Şimdilik rastgele bir sonuç dönelim.
+            Random random = new Random();
+            return Task.FromResult(random.Next(10) > 2); // %70 ihtimalle başarılı
         }
     }
 }

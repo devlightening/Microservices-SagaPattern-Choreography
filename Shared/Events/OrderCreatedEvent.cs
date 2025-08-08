@@ -1,4 +1,5 @@
-﻿using Shared.Messages;
+﻿using Shared.Events.Cammon;
+using Shared.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Shared.Events
 {
-    public class OrderCreatedEvent
+    public class OrderCreatedEvent : IEvent
     {
         public Guid OrderId { get; set; }
         public Guid BuyerId { get; set; }
