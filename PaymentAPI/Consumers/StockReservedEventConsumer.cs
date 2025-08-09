@@ -3,7 +3,7 @@ using Shared.Events;
 
 namespace PaymentAPI.Consumers
 {
-    public class StockReservedEventConsume(IPublishEndpoint _publishEndpoint) : IConsumer<StockReservedEvent>
+    public class StockReservedEventConsumer(IPublishEndpoint _publishEndpoint) : IConsumer<StockReservedEvent>
     {
 
         public async Task Consume(ConsumeContext<StockReservedEvent> context)

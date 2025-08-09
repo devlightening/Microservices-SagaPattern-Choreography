@@ -14,10 +14,15 @@ namespace StockAPI.Consumers
 
             foreach (var orderItem in context.Message.OrderItems)
             {
-                var filter = Builders<Stock>.Filter.Eq(s => s.ProductId, orderItem.ProductId);
-                var update = Builders<Stock>.Update.Inc(s => s.Count, orderItem.Count);
+                var stock = await (await stocksCollection.FindAsync(s => s.ProductId == orderItem.ProductId.ToString())).FirstOrDefaultAsync();
+                if(stock == null)
+                {
+                    stock.Count -= orderItem.Count;
+                    await stocksCollection.FindOneAndReplaceAsync(s=>s.ProductId == orderItem.ProductId.ToString(), stock);
 
-                await stocksCollection.UpdateOneAsync(filter, update);
+                }
+
+
             }
         }
     }

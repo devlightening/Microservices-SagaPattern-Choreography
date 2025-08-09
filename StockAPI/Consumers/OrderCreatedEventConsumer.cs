@@ -6,7 +6,7 @@ using StockAPI.Services;
 
 namespace StockAPI.Consumers
 {
-    public class OrderCreatedEventConsumer(MongoDBService _mongoDBService, ISendEndpointProvider sendEndpointProvider ,IPublishEndpoint publishEndpoint) : IConsumer<OrderCreatedEvent>
+    public class OrderCreatedEventConsumer(MongoDBService _mongoDBService, ISendEndpointProvider sendEndpointProvider, IPublishEndpoint publishEndpoint) : IConsumer<OrderCreatedEvent>
     {
         //readonly MongoDBService _mongoDBService;
 
@@ -21,7 +21,7 @@ namespace StockAPI.Consumers
             IMongoCollection<Models.Entites.Stock> collection = _mongoDBService.GetCollection<Models.Entites.Stock>();
             foreach (var item in context.Message.OrderItems)
             {
-                stockResult.Add(await (await collection.FindAsync(s => s.ProductId == item.ProductId && s.Count >= item.Count)).AnyAsync());
+                stockResult.Add(await (await collection.FindAsync(s => s.ProductId == item.ProductId.ToString() && s.Count >= item.Count)).AnyAsync());
 
             }
             if (stockResult.TrueForAll(s => s.Equals(true)))
@@ -31,10 +31,10 @@ namespace StockAPI.Consumers
                 foreach (var item in context.Message.OrderItems)
                 {
                     //Stok güncelleme işlemi
-                    Models.Entites.Stock stock = await (await collection.FindAsync(s => s.ProductId == item.ProductId && s.Count >= item.Count)).FirstOrDefaultAsync();
+                    Models.Entites.Stock stock = await (await collection.FindAsync(s => s.ProductId == item.ProductId.ToString() && s.Count >= item.Count)).FirstOrDefaultAsync();
                     stock.Count -= item.Count;
 
-                    await collection.FindOneAndReplaceAsync(s => s.ProductId == item.ProductId, stock);
+                    await collection.FindOneAndReplaceAsync(s => s.ProductId == item.ProductId.ToString(), stock);
                     //Stok güncelleme işlemi tamamlandıktan sonra, stok güncelleme event'i fırlatılacak.
 
                 }
